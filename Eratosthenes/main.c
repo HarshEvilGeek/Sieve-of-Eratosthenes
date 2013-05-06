@@ -11,49 +11,26 @@
 #include <time.h>
 #include <math.h>
 
-char get_bitvalue(unsigned char a, int n)//returns value of nth bit
-{
-    if(a&(char)pow(2,n))
-        return 1;
-    else
-        return 0;
-}
-
-unsigned char set_bitvalue(unsigned char a,int n)//sets nth bit as one
-{
-    return a|=(char)pow(2,n);
-}
-
 long long bit_sieve(unsigned char* primes, long long n, long long sqrt)
 {
-    long long noofprimes=0;
-    for(long long i=2;i<=sqrt;i++)
+    long long noofprimes=1;
+    unsigned char powers[]={1,2,4,8,16,32,64,128};
+    for(long long i=3;i<=sqrt;i++)
     {
-        if(get_bitvalue(primes[i/8], (i%8))==0)
+        if(!(primes[i/8]&powers[(i&7)]))
         {
             noofprimes++;
             long long p=(i*i);
-            if(i==2)
+            while(p<=n)
             {
-                while(p<=n)
-                {
-                    primes[p/8]=set_bitvalue(primes[p/8], (p%8));
-                    p+=i;
-                }
-            }
-            else
-            {
-                while(p<=n)
-                {
-                    primes[p/8]=set_bitvalue(primes[p/8], (p%8));
-                    p+=(i*2);
-                }
+                primes[p/8]|=(char)powers[p&7];
+                p+=(i*2);
             }
         }
     }
     for(long long i=sqrt+1;i<=n;i++)
     {
-        if(get_bitvalue(primes[i/8], (i%8))==0)
+        if(!(primes[i/8]&powers[(i&7)]))
         {
             noofprimes++;
         }
@@ -63,29 +40,31 @@ long long bit_sieve(unsigned char* primes, long long n, long long sqrt)
 
 long long diff_sieve(unsigned char* primes, long long n, long long sqrt, long long noofprimes)
 {
-    int* difference=malloc(noofprimes*sizeof(int));
-    long long lastprime=2,q=0;
-    for(long long i=3;i<=sqrt;i++)
+    int* difference = malloc(noofprimes*sizeof(int));
+    long long lastprime = 2,q = 0;
+    for(long long i=3; i<=sqrt; i++)
     {
         if(primes[i]==0)
         {
-            long long p=(i*i);
-            difference[q]=(int)(i-lastprime);
-            lastprime=i;
+            long long p = (i*i);
+            difference[q] = (int)(i-lastprime);
+            lastprime = i;
             q++;
             while(p<=n)
             {
-                primes[p]=1;
-                p+=(i*2);
+                primes[p] = 1;
+                p += (i*2);
             }
             
         }
     }
-    for(long long i=sqrt+1;i<=n;i++)
+    for(long long i = sqrt + 1; i <= n; i++)
     {
-        if(primes[i]==0)
+        if(primes[i] == 0)
         {
-            noofprimes++;
+            difference[q] = (int)(i-lastprime);
+            lastprime = i;
+            q++;
         }
     }
     return (noofprimes*8);
@@ -101,6 +80,13 @@ int main(int argc, const char * argv[])
     unsigned char* diff_primes=malloc(N*sizeof(char));
     for(long i=0;i<(N/8)+1;i++)
         bit_primes[i]=0;
+    int p=4;
+    unsigned char powers[]={1,2,4,8,16,32,64,128};
+    while(p<=N)
+    {
+        bit_primes[p/8]|=(char)powers[p&7];
+        p+=2;
+    }
     for(long i=0;i<N;i++)
         diff_primes[i]=0;
     for(long i=4;i<N;i+=2)
